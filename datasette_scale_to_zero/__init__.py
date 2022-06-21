@@ -43,7 +43,7 @@ def start_that_loop(datasette):
             if last_asgi is None:
                 continue
             if monotonic() - last_asgi > duration:
-                raise SystemExit(0)
+                loop.call_soon(sys.exit, 0)
 
     loop = asyncio.get_running_loop()
     loop.create_task(exit_if_no_recent_activity())
