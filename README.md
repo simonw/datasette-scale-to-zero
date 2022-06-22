@@ -21,7 +21,7 @@ Install this plugin in the same environment as Datasette.
 
 This plugin will only take effect if it has been configured.
 
-To configur, add the following to your ``metadata.json`` or ``metadata.yml`` configuration file:
+Add the following to your ``metadata.json`` or ``metadata.yml`` configuration file:
 
 ```json
 {
