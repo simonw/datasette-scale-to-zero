@@ -44,7 +44,7 @@ def start_that_loop(datasette):
             if last_asgi is None:
                 continue
             if monotonic() - last_asgi > duration:
-                # Avoid logging a trackeback when the server exits
+                # Avoid logging a traceback when the server exits
                 # https://github.com/simonw/datasette-scale-to-zero/issues/2
                 logger = logging.getLogger("uvicorn.error")
                 logger.disabled = True
