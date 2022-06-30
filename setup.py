@@ -14,7 +14,7 @@ def get_long_description():
 
 setup(
     name="datasette-scale-to-zero",
-    description="Quit Datasette if it has not recieved traffic for a specified time period",
+    description="Quit Datasette if it has not received traffic for a specified time period",
     long_description=get_long_description(),
     long_description_content_type="text/markdown",
     author="Simon Willison",
