@@ -9,7 +9,7 @@ Quit Datasette if it has not received traffic for a specified time period
 
 Some hosting providers such as [Fly](https://fly.io/) offer a scale to zero mechanism, where servers can shut down and will be automatically started when new traffic arrives.
 
-This plugin can be used to configure Datasette to quit X minutes (or seconds, or hours) after the last request it received.
+This plugin can be used to configure Datasette to quit X minutes (or seconds, or hours) after the last request it received. It can also cause the Datasette server to exit after a configured maximum time whether or not it is receiving traffic.
 
 ## Installation
 
@@ -32,9 +32,36 @@ Add the following to your ``metadata.json`` or ``metadata.yml`` configuration fi
     }
 }
 ```
-This will cause Datasette to quit if it has not received traffic for 10 minutes.
+This will cause Datasette to quit if it has not received any HTTP traffic for 10 minutes.
 
 You can set this value using a suffix of `m` for minutes, `h` for hours or `s` for seconds.
+
+To cause Datasette to exit if the server has been running for longer than a specific time, use `"max-age"`:
+
+```json
+{
+    "plugins": {
+        "datasette-scale-to-zero": {
+            "max-age": "10h"
+        }
+    }
+}
+```
+This example will exit the Datasette server if it has been running for more than ten hours.
+
+You can use `"duration"` and `"max-age"` together in the same configuration file:
+
+```json
+{
+    "plugins": {
+        "datasette-scale-to-zero": {
+            "max-age": "10h",
+            "duration": "5m"
+        }
+    }
+}
+```
+This example will quit if no traffic has been received in five minutes, or if the server has been running for ten hours.
 
 ## Development
 
