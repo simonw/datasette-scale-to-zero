@@ -5,18 +5,16 @@ import pytest
 
 @pytest.mark.asyncio
 @pytest.mark.parametrize("invalid_duration", [1, "2", "3min", "dog"])
-async def test_plugin_configuration(invalid_duration):
+@pytest.mark.parametrize("key", ("duration", "max-age"))
+async def test_plugin_configuration(invalid_duration, key):
     with pytest.raises(ValueError) as ex:
         ds = Datasette(
             memory=True,
-            metadata={
-                "plugins": {"datasette-scale-to-zero": {"duration": invalid_duration}}
-            },
+            metadata={"plugins": {"datasette-scale-to-zero": {key: invalid_duration}}},
         )
         await ds.invoke_startup()
-        assert (
-            ex.value.args[0] == "duration must be a number followed by a unit (s, m, h)"
-        )
+    message = ex.value.args[0]
+    assert message == "{} must be a number followed by a unit (s, m, h)".format(key)
 
 
 @pytest.mark.parametrize(
@@ -29,12 +27,17 @@ async def test_plugin_configuration(invalid_duration):
         ("10m", 10 * 60),
     ),
 )
-def test_get_config(duration, expected):
+@pytest.mark.parametrize("key", ("duration", "max-age"))
+def test_get_config(key, duration, expected):
     datasette = Datasette(
         memory=True,
-        metadata={"plugins": {"datasette-scale-to-zero": {"duration": duration}}},
+        metadata={
+            "plugins": {
+                "datasette-scale-to-zero": {"duration": duration, "max-age": duration}
+            }
+        },
     )
-    actual = get_config(datasette)
+    actual = get_config(datasette, key)
     assert actual == expected
 
 

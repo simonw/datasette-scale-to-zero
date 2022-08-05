@@ -9,12 +9,13 @@ import sys
 @hookimpl
 def startup(datasette):
     # Verify that the config is valid
-    get_config(datasette)
+    get_config(datasette, "duration")
+    get_config(datasette, "max-age")
 
 
 @hookimpl
 def asgi_wrapper(datasette):
-    duration = get_config(datasette)
+    duration = get_config(datasette, "duration")
 
     def wrap_with_scale_to_zero(app):
         if not duration:
@@ -33,7 +34,7 @@ def asgi_wrapper(datasette):
 
 
 def start_that_loop(datasette):
-    duration = get_config(datasette)
+    duration = get_config(datasette, "duration")
     if duration is None:
         return
 
@@ -54,13 +55,13 @@ def start_that_loop(datasette):
     loop.create_task(exit_if_no_recent_activity())
 
 
-def get_config(datasette):
-    duration_s = (datasette.plugin_config("datasette-scale-to-zero") or {}).get(
-        "duration"
-    )
+def get_config(datasette, key):
+    duration_s = (datasette.plugin_config("datasette-scale-to-zero") or {}).get(key)
     if duration_s is None:
         return None
-    invalid_duration_message = "duration must be a number followed by a unit (s, m, h)"
+    invalid_duration_message = (
+        "{} must be a number followed by a unit (s, m, h)".format(key)
+    )
     if not isinstance(duration_s, str):
         raise ValueError(invalid_duration_message)
     unit = duration_s[-1]
@@ -75,4 +76,4 @@ def get_config(datasette):
     elif unit == "h":
         return duration * 60 * 60
     else:
-        raise ValueError("Invalid duration")
+        raise ValueError("Invalid {}".format(key))
