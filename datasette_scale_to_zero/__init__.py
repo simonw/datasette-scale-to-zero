@@ -54,7 +54,6 @@ def start_that_loop(datasette):
                     should_exit = True
 
             if max_age is not None:
-                print(f"Considering - {max_age=}, {server_start=}")
                 # Has server been running for longer than max_age?
                 if monotonic() - server_start > max_age:
                     should_exit = True
