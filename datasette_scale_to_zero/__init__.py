@@ -1,4 +1,5 @@
 import asyncio
+from re import S
 from datasette import hookimpl
 from functools import wraps
 from time import monotonic
@@ -16,9 +17,10 @@ def startup(datasette):
 @hookimpl
 def asgi_wrapper(datasette):
     duration = get_config(datasette, "duration")
+    max_age = get_config(datasette, "max-age")
 
     def wrap_with_scale_to_zero(app):
-        if not duration:
+        if duration is None and max_age is None:
             return app
 
         @wraps(app)
@@ -35,16 +37,29 @@ def asgi_wrapper(datasette):
 
 def start_that_loop(datasette):
     duration = get_config(datasette, "duration")
-    if duration is None:
+    max_age = get_config(datasette, "max-age")
+
+    if duration is None and max_age is None:
         return
 
-    async def exit_if_no_recent_activity():
+    async def check_if_server_should_exit():
+        server_start = monotonic()
         while True:
             await asyncio.sleep(1)
             last_asgi = getattr(datasette, "_scale_to_zero_last_asgi", None)
-            if last_asgi is None:
-                continue
-            if monotonic() - last_asgi > duration:
+            should_exit = False
+            if duration is not None and last_asgi is not None:
+                # Have there been no reuests for longer than duration?
+                if monotonic() - last_asgi > duration:
+                    should_exit = True
+
+            if max_age is not None:
+                print(f"Considering - {max_age=}, {server_start=}")
+                # Has server been running for longer than max_age?
+                if monotonic() - server_start > max_age:
+                    should_exit = True
+
+            if should_exit:
                 # Avoid logging a traceback when the server exits
                 # https://github.com/simonw/datasette-scale-to-zero/issues/2
                 logger = logging.getLogger("uvicorn.error")
@@ -52,7 +67,7 @@ def start_that_loop(datasette):
                 loop.call_soon(sys.exit, 0)
 
     loop = asyncio.get_running_loop()
-    loop.create_task(exit_if_no_recent_activity())
+    loop.create_task(check_if_server_should_exit())
 
 
 def get_config(datasette, key):

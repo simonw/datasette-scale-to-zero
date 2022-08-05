@@ -1,6 +1,10 @@
+from time import monotonic
 from datasette.app import Datasette
 from datasette_scale_to_zero import get_config
 import pytest
+import json
+import subprocess
+import sys
 
 
 @pytest.mark.asyncio
@@ -51,3 +55,20 @@ async def test_records_last_asgi():
     await datasette.invoke_startup()
     await datasette.client.get("/")
     assert datasette._scale_to_zero_last_asgi is not None
+
+
+@pytest.mark.parametrize("key", ("duration", "max-age"))
+def test_server_quits(tmpdir, key):
+    metadata = tmpdir / "metadata.json"
+    metadata.write_text(
+        json.dumps({"plugins": {"datasette-scale-to-zero": {key: "1s"}}}), "utf-8"
+    )
+    start = monotonic()
+    proc = subprocess.run(
+        [sys.executable, "-m", "datasette", "-p", "9014", "-m", str(metadata)],
+        timeout=3,
+        check=True,
+        capture_output=True,
+    )
+    end = monotonic()
+    assert end - start < 2
