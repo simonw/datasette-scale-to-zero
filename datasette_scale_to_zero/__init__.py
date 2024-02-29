@@ -144,19 +144,16 @@ def get_config(datasette):
 
     # Validate the shutdown_x options
     if "shutdown_url" in raw_config:
-        shutdown_url = raw_config["shutdown_url"]
-        if not isinstance(shutdown_url, str):
+        shutdown_url = raw_config["shutdown_url"] or ""
+        if shutdown_url and not isinstance(shutdown_url, str):
             raise ValueError("shutdown_url must be a string")
-        if not shutdown_url.startswith("http"):
+        if shutdown_url and not shutdown_url.startswith("http"):
             raise ValueError("shutdown_url must start with http")
 
     if "shutdown_headers" in raw_config:
         shutdown_headers = raw_config["shutdown_headers"]
         if not isinstance(shutdown_headers, dict):
             raise ValueError("shutdown_headers must be a dictionary")
-        for k, v in shutdown_headers.items():
-            if not isinstance(k, str) or not isinstance(v, str):
-                raise ValueError("shutdown_headers must be a dictionary of strings")
 
     if "shutdown_method" in raw_config:
         shutdown_method = raw_config["shutdown_method"]

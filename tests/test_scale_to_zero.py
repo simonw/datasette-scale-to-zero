@@ -39,10 +39,6 @@ async def test_plugin_configuration(invalid_duration, key):
         ({"shutdown_url": 1}, "shutdown_url must be a string"),
         ({"shutdown_url": "foo"}, "shutdown_url must start with http"),
         ({"shutdown_headers": 1}, "shutdown_headers must be a dictionary"),
-        (
-            {"shutdown_headers": {"foo": 1}},
-            "shutdown_headers must be a dictionary of strings",
-        ),
         ({"shutdown_method": 1}, "shutdown_method must be a string"),
         (
             {"shutdown_method": "foo"},
@@ -64,6 +60,19 @@ async def test_invalid_configurations(config, expected_error):
         await ds.invoke_startup()
     message = ex.value.args[0]
     assert message == expected_error
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize(
+    "config",
+    ({"shutdown_url": ""}, {"shutdown_url": None}),
+)
+async def test_shutdown_url_can_be_none_or_blank(config):
+    ds = Datasette(
+        memory=True,
+        plugin_config={"datasette-scale-to-zero": config},
+    )
+    await ds.invoke_startup()
 
 
 @pytest.mark.parametrize(
