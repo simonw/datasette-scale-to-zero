@@ -36,26 +36,26 @@ This will cause Datasette to quit if it has not received any HTTP traffic for 10
 
 You can set this value using a suffix of `m` for minutes, `h` for hours or `s` for seconds.
 
-To cause Datasette to exit if the server has been running for longer than a specific time, use `"max-age"`:
+To cause Datasette to exit if the server has been running for longer than a specific time, use `"max_age"`:
 
 ```json
 {
     "plugins": {
         "datasette-scale-to-zero": {
-            "max-age": "10h"
+            "max_age": "10h"
         }
     }
 }
 ```
 This example will exit the Datasette server if it has been running for more than ten hours.
 
-You can use `"duration"` and `"max-age"` together in the same configuration file:
+You can use `"duration"` and `"max_age"` together in the same configuration file:
 
 ```json
 {
     "plugins": {
         "datasette-scale-to-zero": {
-            "max-age": "10h",
+            "max_age": "10h",
             "duration": "5m"
         }
     }

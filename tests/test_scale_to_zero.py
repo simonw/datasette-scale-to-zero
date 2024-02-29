@@ -9,7 +9,7 @@ import sys
 
 @pytest.mark.asyncio
 @pytest.mark.parametrize("invalid_duration", [1, "2", "3min", "dog"])
-@pytest.mark.parametrize("key", ("duration", "max-age"))
+@pytest.mark.parametrize("key", ("duration", "max_age", "max-age"))
 async def test_plugin_configuration(invalid_duration, key):
     with pytest.raises(ValueError) as ex:
         ds = Datasette(
@@ -18,7 +18,9 @@ async def test_plugin_configuration(invalid_duration, key):
         )
         await ds.invoke_startup()
     message = ex.value.args[0]
-    assert message == "{} must be a number followed by a unit (s, m, h)".format(key)
+    assert message == "{} must be a number followed by a unit (s, m, h)".format(
+        key.replace("-", "_")
+    )
 
 
 @pytest.mark.parametrize(
@@ -31,17 +33,17 @@ async def test_plugin_configuration(invalid_duration, key):
         ("10m", 10 * 60),
     ),
 )
-@pytest.mark.parametrize("key", ("duration", "max-age"))
+@pytest.mark.parametrize("key", ("duration", "max_age"))
 def test_get_config(key, duration, expected):
     datasette = Datasette(
         memory=True,
         metadata={
             "plugins": {
-                "datasette-scale-to-zero": {"duration": duration, "max-age": duration}
+                "datasette-scale-to-zero": {"duration": duration, "max_age": duration}
             }
         },
     )
-    actual = get_config(datasette, key)
+    actual = get_config(datasette)[key]
     assert actual == expected
 
 
@@ -57,7 +59,7 @@ async def test_records_last_asgi():
     assert datasette._scale_to_zero_last_asgi is not None
 
 
-@pytest.mark.parametrize("key", ("duration", "max-age"))
+@pytest.mark.parametrize("key", ("duration", "max_age"))
 def test_server_quits(tmpdir, key):
     metadata = tmpdir / "metadata.json"
     metadata.write_text(
