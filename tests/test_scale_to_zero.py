@@ -9,6 +9,13 @@ import subprocess
 import sys
 
 
+@pytest.fixture
+def non_mocked_hosts():
+    # This ensures httpx-mock will not affect Datasette's own
+    # httpx calls made in the tests by datasette.client:
+    return ["localhost"]
+
+
 @pytest.mark.asyncio
 @pytest.mark.parametrize("invalid_duration", [1, "2", "3min", "dog"])
 @pytest.mark.parametrize("key", ("duration", "max_age", "max-age"))
