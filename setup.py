@@ -33,6 +33,8 @@ setup(
     packages=["datasette_scale_to_zero"],
     entry_points={"datasette": ["scale_to_zero = datasette_scale_to_zero"]},
     install_requires=["datasette"],
-    extras_require={"test": ["pytest", "pytest-asyncio"]},
-    python_requires=">=3.7",
+    extras_require={
+        "test": ["pytest", "pytest-asyncio", "datasette-test", "pytest-httpx"]
+    },
+    python_requires=">=3.8",
 )

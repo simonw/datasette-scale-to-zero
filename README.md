@@ -63,6 +63,54 @@ You can use `"duration"` and `"max_age"` together in the same configuration file
 ```
 This example will quit if no traffic has been received in five minutes, or if the server has been running for ten hours.
 
+## Configuring a shutdown HTTP message
+
+You can also configure the plugin to send an HTTP request somewhere right before it quits, using the `"shutdown_url"` option:
+
+```json
+{
+    "plugins": {
+        "datasette-scale-to-zero": {
+            "duration": "10m",
+            "shutdown_url": "https://example.com/shutdown"
+        }
+    }
+}
+```
+You can add additional headers to the GET request - for example to send Authorization headers - using `"shutdown_headers"`:
+
+```json
+{
+    "plugins": {
+        "datasette-scale-to-zero": {
+            "duration": "10m",
+            "shutdown_url": "https://example.com/shutdown",
+            "shutdown_headers": {
+                "Authorization": "Bearer secret"
+            }
+        }
+    }
+}
+```
+Use `"shutdown_method"` to set a different HTTP method, e.g. for `POST`. You can also set `shutdown_body` to specify the body that should be sent with the request:
+
+```json
+{
+    "plugins": {
+        "datasette-scale-to-zero": {
+            "duration": "10m",
+            "shutdown_url": "https://example.com/shutdown",
+            "shutdown_method": "POST",
+            "shutdown_headers": {
+                "Authorization": "Bearer secret",
+                "Content-Type": "application/json"
+            },
+            "shutdown_body": "{\"message\": \"shutting down\"}"
+        }
+    }
+}
+```
+
 ## Development
 
 To set up this plugin locally, first checkout the code. Then create a new virtual environment:

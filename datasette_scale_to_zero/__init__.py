@@ -2,6 +2,7 @@ import asyncio
 from re import S
 from datasette import hookimpl
 from functools import wraps
+import httpx
 from time import monotonic
 import logging
 import sys
@@ -62,10 +63,33 @@ def start_that_loop(datasette):
                 # https://github.com/simonw/datasette-scale-to-zero/issues/2
                 logger = logging.getLogger("uvicorn.error")
                 logger.disabled = True
-                loop.call_soon(sys.exit, 0)
+                loop.call_soon(do_exit, datasette)
 
     loop = asyncio.get_running_loop()
     loop.create_task(check_if_server_should_exit())
+
+
+def do_exit(datasette):
+    config = get_config(datasette)
+    try:
+        if "shutdown_url" in config:
+            # Send a request to the shutdown URL first
+            shutdown_url = config["shutdown_url"]
+            shutdown_method = config.get("shutdown_method", "GET")
+            shutdown_headers = config.get("shutdown_headers", {})
+            shutdown_body = config.get("shutdown_body", "")
+            method = getattr(httpx, shutdown_method.lower())
+            kwargs = {}
+            if shutdown_headers:
+                kwargs["headers"] = shutdown_headers
+            if shutdown_body:
+                kwargs["data"] = shutdown_body
+            response = method(shutdown_url, **kwargs)
+            response.raise_for_status()
+    except Exception as e:
+        print("Error sending shutdown request:", e, file=sys.stderr)
+    finally:
+        sys.exit(0)
 
 
 def get_config(datasette):
@@ -75,6 +99,22 @@ def get_config(datasette):
     if "max-age" in raw_config:
         # This key was renamed, but we still support the old name
         raw_config["max_age"] = raw_config.pop("max-age")
+
+    valid_keys = (
+        "duration",
+        "max_age",
+        "shutdown_url",
+        "shutdown_headers",
+        "shutdown_method",
+        "shutdown_body",
+    )
+    invalid_keys = set(raw_config) - set(valid_keys)
+    if invalid_keys:
+        raise ValueError(
+            "Invalid datasette-scale-to-zero configuration keys: {}".format(
+                ", ".join(sorted(invalid_keys))
+            )
+        )
 
     # Resolve 10s/10m/10h to seconds for duration and max_age
     for key in ("duration", "max_age"):
@@ -101,4 +141,39 @@ def get_config(datasette):
         else:
             raise ValueError("Invalid {}".format(key))
         config[key] = duration
+
+    # Validate the shutdown_x options
+    if "shutdown_url" in raw_config:
+        shutdown_url = raw_config["shutdown_url"]
+        if not isinstance(shutdown_url, str):
+            raise ValueError("shutdown_url must be a string")
+        if not shutdown_url.startswith("http"):
+            raise ValueError("shutdown_url must start with http")
+
+    if "shutdown_headers" in raw_config:
+        shutdown_headers = raw_config["shutdown_headers"]
+        if not isinstance(shutdown_headers, dict):
+            raise ValueError("shutdown_headers must be a dictionary")
+        for k, v in shutdown_headers.items():
+            if not isinstance(k, str) or not isinstance(v, str):
+                raise ValueError("shutdown_headers must be a dictionary of strings")
+
+    if "shutdown_method" in raw_config:
+        shutdown_method = raw_config["shutdown_method"]
+        if not isinstance(shutdown_method, str):
+            raise ValueError("shutdown_method must be a string")
+        if shutdown_method not in ("GET", "POST", "PUT", "DELETE", "PATCH"):
+            raise ValueError(
+                "shutdown_method must be one of GET, POST, PUT, DELETE, PATCH"
+            )
+
+    if "shutdown_body" in raw_config:
+        shutdown_body = raw_config["shutdown_body"]
+        if not isinstance(shutdown_body, str):
+            raise ValueError("shutdown_body must be a string")
+
+    for key in raw_config:
+        if key.startswith("shutdown_"):
+            config[key] = raw_config[key]
+
     return config
