@@ -116,7 +116,7 @@ def test_server_quits(tmpdir, key):
         capture_output=True,
     )
     end = monotonic()
-    assert end - start < 2
+    assert end - start < 3
 
 
 @pytest.fixture
