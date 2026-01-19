@@ -1,6 +1,6 @@
 [project]
 name = "datasette-scale-to-zero"
-version = "0.3.1"
+version = "0.3.2"
 description = "Quit Datasette if it has not received traffic for a specified time period"
 readme = "README.md"
 requires-python = ">=3.10"
