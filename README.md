@@ -19,7 +19,7 @@ Install this plugin in the same environment as Datasette.
 
 ## Configuration
 
-This plugin will only take effect if it has been configured.
+This plugin will only take effect if it has been configured with a `duration` or `max_age` value. Without at least one of these settings the plugin will do nothing.
 
 Add the following to your ``metadata.json`` or ``metadata.yml`` configuration file:
 

@@ -100,6 +100,28 @@ def test_get_config(key, duration, expected):
 
 
 @pytest.mark.asyncio
+@pytest.mark.parametrize(
+    "config",
+    (
+        {},
+        {"duration": None},
+        {"max_age": None},
+        {"duration": None, "max_age": None},
+    ),
+)
+async def test_plugin_disabled_when_no_duration_or_max_age(config):
+    # When neither duration nor max_age is set, plugin should be disabled
+    # and _scale_to_zero_last_asgi should never be set
+    datasette = Datasette(
+        memory=True,
+        plugin_config={"datasette-scale-to-zero": config},
+    )
+    await datasette.invoke_startup()
+    await datasette.client.get("/")
+    assert not hasattr(datasette, "_scale_to_zero_last_asgi")
+
+
+@pytest.mark.asyncio
 async def test_records_last_asgi():
     datasette = Datasette(
         memory=True,
