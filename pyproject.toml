@@ -3,12 +3,11 @@ name = "datasette-scale-to-zero"
 version = "0.3.1"
 description = "Quit Datasette if it has not received traffic for a specified time period"
 readme = "README.md"
-requires-python = ">=3.8"
+requires-python = ">=3.10"
 license = "Apache-2.0"
 authors = [{name = "Simon Willison"}]
 classifiers = [
     "Framework :: Datasette",
-    "License :: OSI Approved :: Apache Software License",
 ]
 dependencies = [
     "datasette",
