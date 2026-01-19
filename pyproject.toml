@@ -1,0 +1,39 @@
+[project]
+name = "datasette-scale-to-zero"
+version = "0.3.1"
+description = "Quit Datasette if it has not received traffic for a specified time period"
+readme = "README.md"
+requires-python = ">=3.8"
+license = "Apache-2.0"
+authors = [{name = "Simon Willison"}]
+classifiers = [
+    "Framework :: Datasette",
+    "License :: OSI Approved :: Apache Software License",
+]
+dependencies = [
+    "datasette",
+]
+
+[project.urls]
+Homepage = "https://github.com/simonw/datasette-scale-to-zero"
+Changelog = "https://github.com/simonw/datasette-scale-to-zero/releases"
+Issues = "https://github.com/simonw/datasette-scale-to-zero/issues"
+CI = "https://github.com/simonw/datasette-scale-to-zero/actions"
+
+[project.entry-points.datasette]
+scale_to_zero = "datasette_scale_to_zero"
+
+[dependency-groups]
+dev = [
+    "pytest",
+    "pytest-asyncio",
+    "datasette-test",
+    "pytest-httpx",
+]
+
+[tool.uv.build-backend]
+module-root = ""
+
+[build-system]
+requires = ["uv_build>=0.9.18,<0.10.0"]
+build-backend = "uv_build"
