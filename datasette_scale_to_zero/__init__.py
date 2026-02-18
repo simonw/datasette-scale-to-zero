@@ -66,13 +66,13 @@ def start_that_loop(datasette):
                 # https://github.com/simonw/datasette-scale-to-zero/issues/2
                 logger = logging.getLogger("uvicorn.error")
                 logger.disabled = True
-                loop.call_soon(do_exit, datasette)
+                loop.create_task(do_exit(datasette))
 
     loop = asyncio.get_running_loop()
     loop.create_task(check_if_server_should_exit())
 
 
-def do_exit(datasette):
+async def do_exit(datasette):
     config = get_config(datasette)
     try:
         if "shutdown_url" in config:
@@ -81,14 +81,16 @@ def do_exit(datasette):
             shutdown_method = config.get("shutdown_method", "GET")
             shutdown_headers = config.get("shutdown_headers", {})
             shutdown_body = config.get("shutdown_body", "")
-            method = getattr(httpx, shutdown_method.lower())
             kwargs = {}
             if shutdown_headers:
                 kwargs["headers"] = shutdown_headers
             if shutdown_body:
-                kwargs["data"] = shutdown_body
-            response = method(shutdown_url, **kwargs)
-            response.raise_for_status()
+                kwargs["content"] = shutdown_body
+            async with httpx.AsyncClient() as client:
+                response = await client.request(
+                    shutdown_method, shutdown_url, **kwargs
+                )
+                response.raise_for_status()
     except Exception as e:
         print("Error sending shutdown request:", e, file=sys.stderr)
     finally:
