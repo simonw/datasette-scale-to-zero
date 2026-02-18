@@ -87,9 +87,7 @@ async def do_exit(datasette):
             if shutdown_body:
                 kwargs["content"] = shutdown_body
             async with httpx.AsyncClient() as client:
-                response = await client.request(
-                    shutdown_method, shutdown_url, **kwargs
-                )
+                response = await client.request(shutdown_method, shutdown_url, **kwargs)
                 response.raise_for_status()
     except Exception as e:
         print("Error sending shutdown request:", e, file=sys.stderr)
