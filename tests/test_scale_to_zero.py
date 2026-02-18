@@ -181,3 +181,61 @@ async def test_shutdown_pings_shutdown_url(mock_sys_exit, httpx_mock):
     assert request.url == "https://example.com/shutdown"
     assert request.headers["Authorization"] == "Bearer secret"
     assert request.content == b'{"message": "shutting down"}'
+
+
+@pytest.mark.asyncio
+async def test_shutdown_false_does_not_exit(mock_sys_exit, httpx_mock):
+    httpx_mock.add_response(url="https://example.com/shutdown")
+    datasette = Datasette(
+        memory=True,
+        plugin_config={
+            "datasette-scale-to-zero": {
+                "duration": "1s",
+                "shutdown_url": "https://example.com/shutdown",
+                "shutdown_method": "POST",
+                "shutdown": False,
+            }
+        },
+    )
+    await datasette.invoke_startup()
+    await datasette.client.get("/")
+    await asyncio.sleep(1.2)
+    # Webhook should have been called
+    request = httpx_mock.get_request()
+    assert request.method == "POST"
+    assert request.url == "https://example.com/shutdown"
+    # But sys.exit should NOT have been called
+    assert not mock_sys_exit.called
+
+
+@pytest.mark.asyncio
+async def test_shutdown_false_fires_webhook_only_once(mock_sys_exit, httpx_mock):
+    httpx_mock.add_response(url="https://example.com/shutdown")
+    datasette = Datasette(
+        memory=True,
+        plugin_config={
+            "datasette-scale-to-zero": {
+                "duration": "1s",
+                "shutdown_url": "https://example.com/shutdown",
+                "shutdown": False,
+            }
+        },
+    )
+    await datasette.invoke_startup()
+    await datasette.client.get("/")
+    # Wait long enough for multiple loop iterations
+    await asyncio.sleep(3)
+    requests = httpx_mock.get_requests()
+    assert len(requests) == 1
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize("value", ("yes", 1, 0, "false"))
+async def test_shutdown_invalid_values(value):
+    with pytest.raises(ValueError) as ex:
+        ds = Datasette(
+            memory=True,
+            plugin_config={"datasette-scale-to-zero": {"shutdown": value}},
+        )
+        await ds.invoke_startup()
+    assert ex.value.args[0] == "shutdown must be a boolean (true or false)"

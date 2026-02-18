@@ -59,6 +59,9 @@ def start_that_loop(datasette):
                     should_exit = True
 
             if should_exit:
+                if getattr(datasette, "_scale_to_zero_fired", False):
+                    break
+                datasette._scale_to_zero_fired = True
                 # Avoid logging a traceback when the server exits
                 # https://github.com/simonw/datasette-scale-to-zero/issues/2
                 logger = logging.getLogger("uvicorn.error")
@@ -89,7 +92,8 @@ def do_exit(datasette):
     except Exception as e:
         print("Error sending shutdown request:", e, file=sys.stderr)
     finally:
-        sys.exit(0)
+        if config.get("shutdown", True):
+            sys.exit(0)
 
 
 def get_config(datasette):
@@ -103,6 +107,7 @@ def get_config(datasette):
     valid_keys = (
         "duration",
         "max_age",
+        "shutdown",
         "shutdown_url",
         "shutdown_headers",
         "shutdown_method",
@@ -168,6 +173,12 @@ def get_config(datasette):
         shutdown_body = raw_config["shutdown_body"]
         if not isinstance(shutdown_body, str):
             raise ValueError("shutdown_body must be a string")
+
+    if "shutdown" in raw_config:
+        shutdown = raw_config["shutdown"]
+        if not isinstance(shutdown, bool):
+            raise ValueError("shutdown must be a boolean (true or false)")
+        config["shutdown"] = shutdown
 
     for key in raw_config:
         if key.startswith("shutdown_"):
