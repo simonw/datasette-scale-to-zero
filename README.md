@@ -113,7 +113,7 @@ Use `"shutdown_method"` to set a different HTTP method, e.g. for `POST`. You can
 
 ## Using a webhook instead of exiting
 
-By default, the plugin calls `sys.exit(0)` to shut down the Datasette process. If you'd prefer to have an external system handle the shutdown - for example, a cloud provider API or container orchestrator - you can set `"shutdown"` to `false`. This will cause the plugin to fire the `shutdown_url` webhook but **not** exit the process:
+By default, the plugin calls `sys.exit(0)` to shut down the Datasette process. If you'd prefer to have an external system handle the shutdown - for example, a cloud provider API or container orchestrator - you can set `"exit"` to `false`. This will cause the plugin to fire the `shutdown_url` webhook but **not** exit the process:
 
 ```json
 {
@@ -127,7 +127,7 @@ By default, the plugin calls `sys.exit(0)` to shut down the Datasette process. I
                 "Content-Type": "application/json"
             },
             "shutdown_body": "{\"instance\": \"abc123\"}",
-            "shutdown": false
+            "exit": false
         }
     }
 }

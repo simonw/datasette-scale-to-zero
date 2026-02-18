@@ -92,7 +92,7 @@ async def do_exit(datasette):
     except Exception as e:
         print("Error sending shutdown request:", e, file=sys.stderr)
     finally:
-        if config.get("shutdown", True):
+        if config.get("exit", True):
             sys.exit(0)
 
 
@@ -107,7 +107,7 @@ def get_config(datasette):
     valid_keys = (
         "duration",
         "max_age",
-        "shutdown",
+        "exit",
         "shutdown_url",
         "shutdown_headers",
         "shutdown_method",
@@ -174,11 +174,11 @@ def get_config(datasette):
         if not isinstance(shutdown_body, str):
             raise ValueError("shutdown_body must be a string")
 
-    if "shutdown" in raw_config:
-        shutdown = raw_config["shutdown"]
-        if not isinstance(shutdown, bool):
-            raise ValueError("shutdown must be a boolean (true or false)")
-        config["shutdown"] = shutdown
+    if "exit" in raw_config:
+        exit_val = raw_config["exit"]
+        if not isinstance(exit_val, bool):
+            raise ValueError("exit must be a boolean (true or false)")
+        config["exit"] = exit_val
 
     for key in raw_config:
         if key.startswith("shutdown_"):

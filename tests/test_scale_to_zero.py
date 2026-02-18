@@ -184,7 +184,7 @@ async def test_shutdown_pings_shutdown_url(mock_sys_exit, httpx_mock):
 
 
 @pytest.mark.asyncio
-async def test_shutdown_false_does_not_exit(mock_sys_exit, httpx_mock):
+async def test_exit_false_does_not_exit(mock_sys_exit, httpx_mock):
     httpx_mock.add_response(url="https://example.com/shutdown")
     datasette = Datasette(
         memory=True,
@@ -193,7 +193,7 @@ async def test_shutdown_false_does_not_exit(mock_sys_exit, httpx_mock):
                 "duration": "1s",
                 "shutdown_url": "https://example.com/shutdown",
                 "shutdown_method": "POST",
-                "shutdown": False,
+                "exit": False,
             }
         },
     )
@@ -209,7 +209,7 @@ async def test_shutdown_false_does_not_exit(mock_sys_exit, httpx_mock):
 
 
 @pytest.mark.asyncio
-async def test_shutdown_false_fires_webhook_only_once(mock_sys_exit, httpx_mock):
+async def test_exit_false_fires_webhook_only_once(mock_sys_exit, httpx_mock):
     httpx_mock.add_response(url="https://example.com/shutdown")
     datasette = Datasette(
         memory=True,
@@ -217,7 +217,7 @@ async def test_shutdown_false_fires_webhook_only_once(mock_sys_exit, httpx_mock)
             "datasette-scale-to-zero": {
                 "duration": "1s",
                 "shutdown_url": "https://example.com/shutdown",
-                "shutdown": False,
+                "exit": False,
             }
         },
     )
@@ -231,11 +231,11 @@ async def test_shutdown_false_fires_webhook_only_once(mock_sys_exit, httpx_mock)
 
 @pytest.mark.asyncio
 @pytest.mark.parametrize("value", ("yes", 1, 0, "false"))
-async def test_shutdown_invalid_values(value):
+async def test_exit_invalid_values(value):
     with pytest.raises(ValueError) as ex:
         ds = Datasette(
             memory=True,
-            plugin_config={"datasette-scale-to-zero": {"shutdown": value}},
+            plugin_config={"datasette-scale-to-zero": {"exit": value}},
         )
         await ds.invoke_startup()
-    assert ex.value.args[0] == "shutdown must be a boolean (true or false)"
+    assert ex.value.args[0] == "exit must be a boolean (true or false)"
