@@ -111,6 +111,30 @@ Use `"shutdown_method"` to set a different HTTP method, e.g. for `POST`. You can
 }
 ```
 
+## Using a webhook instead of exiting
+
+By default, the plugin calls `sys.exit(0)` to shut down the Datasette process. If you'd prefer to have an external system handle the shutdown - for example, a cloud provider API or container orchestrator - you can set `"shutdown"` to `false`. This will cause the plugin to fire the `shutdown_url` webhook but **not** exit the process:
+
+```json
+{
+    "plugins": {
+        "datasette-scale-to-zero": {
+            "duration": "10m",
+            "shutdown_url": "https://api.example.com/instances/stop",
+            "shutdown_method": "POST",
+            "shutdown_headers": {
+                "Authorization": "Bearer token123",
+                "Content-Type": "application/json"
+            },
+            "shutdown_body": "{\"instance\": \"abc123\"}",
+            "shutdown": false
+        }
+    }
+}
+```
+
+The webhook will fire exactly once when the idle timeout or max age is reached. The process will continue running until the external system shuts it down.
+
 ## Development
 
 To set up this plugin locally, first checkout the code. Then create a new virtual environment:
